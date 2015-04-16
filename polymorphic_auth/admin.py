@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.forms import UserChangeForm
-from django_polymorphic_auth.models import User
-from django_polymorphic_auth.usertypes.email.models import EmailUser
-from django_polymorphic_auth.usertypes.username.models import UsernameUser
+from polymorphic_auth.models import User
+from polymorphic_auth.usertypes.email.models import EmailUser
+from polymorphic_auth.usertypes.username.models import UsernameUser
 from polymorphic.admin import \
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 
@@ -32,15 +32,15 @@ class UserAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
 
     def get_child_models(self):
-        from django_polymorphic_auth.usertypes.email.admin import \
+        from polymorphic_auth.usertypes.email.admin import \
             EmailUserAdmin
-        from django_polymorphic_auth.usertypes.username.admin import \
+        from polymorphic_auth.usertypes.username.admin import \
             UsernameUserAdmin
         child_models = []
-        if 'django_polymorphic_auth.usertypes.email' in \
+        if 'polymorphic_auth.usertypes.email' in \
                 settings.INSTALLED_APPS:
             child_models.append((EmailUser, EmailUserAdmin))
-        if 'django_polymorphic_auth.usertypes.username' in \
+        if 'polymorphic_auth.usertypes.username' in \
                 settings.INSTALLED_APPS:
             child_models.append((UsernameUser, UsernameUserAdmin))
         return child_models

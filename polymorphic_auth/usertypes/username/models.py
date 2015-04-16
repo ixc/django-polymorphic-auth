@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
-from django_polymorphic_auth.models import UsernameFieldMixin
-from django_polymorphic_auth.usertypes.email.abstract import AbstractEmailUser
+from polymorphic_auth.models import UsernameFieldMixin
+from polymorphic_auth.usertypes.email.abstract import AbstractEmailUser
 
 
 class AbstractUsernameUser(AbstractEmailUser, UsernameFieldMixin):

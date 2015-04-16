@@ -1,6 +1,6 @@
 import setuptools
 
-from django_polymorphic_auth import __version__
+from polymorphic_auth import __version__
 
 setuptools.setup(
     name='django-polymorphic-auth',

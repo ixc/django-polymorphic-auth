@@ -1,4 +1,4 @@
-from django_polymorphic_auth.models import \
+from polymorphic_auth.models import \
     EmailFieldMixin, NameFieldsMixin, NameMethodsMixin, User
 
 
