@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.forms import UserChangeForm
 from django_polymorphic_auth.models import User
 from django_polymorphic_auth.usertypes.email.models import EmailUser
 from django_polymorphic_auth.usertypes.username.models import UsernameUser
@@ -8,8 +9,19 @@ from polymorphic.admin import \
 
 
 class UserChildAdmin(PolymorphicChildModelAdmin):
+    base_fieldsets = (
+        ('Meta', {
+            'classes': ('collapse', ),
+            'fields': ('last_login', )
+        }),
+        ('Permissions', {
+            'fields': (
+                'is_active', 'is_staff', 'is_superuser', 'groups',
+                'user_permissions')
+        }),
+    )
+    base_form = UserChangeForm
     base_model = User
-    # base_form = forms.ProductAdminForm
 
 
 class UserAdmin(PolymorphicParentModelAdmin):
