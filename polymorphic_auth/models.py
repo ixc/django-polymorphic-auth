@@ -1,3 +1,8 @@
+from __future__ import print_function
+
+import random
+import sys
+
 from django.contrib.auth.models import \
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core import validators
@@ -67,6 +72,16 @@ class NameMethodsMixin(object):
         AttributeError: 'NoneType' object has no attribute 'name'
 
     """
+
+    @classmethod
+    def create_initial(cls, **kwargs):
+        """
+        Derive first and last name from name.
+        """
+        name = kwargs.get('name', '').split()
+        kwargs.setdefault('first_name', ' '.join(name[:1]))
+        kwargs.setdefault('last_name', ' '.join(name[1:]))
+        return super(NameMethodsMixin, cls).create_initial(**kwargs)
 
     def get_full_name(self):
         """
@@ -154,8 +169,6 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser, PermissionsMixin):
     created = models.DateTimeField(
         _('created'), default=timezone.now, editable=False)
 
-    objects = UserManager()
-
     USERNAME_FIELD = 'id'
 
     class Meta:
@@ -166,9 +179,43 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return six.text_type(self.get_username())
 
+    @classmethod
+    def create_initial(cls, _stdout=sys.stdout, **kwargs):
+        """
+        Creates an initial user account, if it does not already exist.
+
+        You must provide all required fields that do not have a default value
+        as ``kwargs``. If no password is given, one will be randomly generated.
+
+        Credentials and field values will be written to ``_stdout``.
+        """
+        # This is a classmethod instead of a manager method so that subclasses
+        # can easily override it to provide additional or derived fields. For
+        # example, deriving a username from a name or email address.
+        username = kwargs.pop(cls.USERNAME_FIELD, None)
+        password = kwargs.pop('password', cls.objects.make_random_password(
+            length=random.randint(19, 28)))
+        try:
+            cls.objects.get(**{cls.USERNAME_FIELD: username})
+        except cls.DoesNotExist:
+            user = cls()
+            setattr(user, cls.USERNAME_FIELD, username)
+            user.set_password(password)
+            out = [
+                'Created user account:',
+                '  {}: {{}}'.format(cls.USERNAME_FIELD),
+                '  password: {}'.format(password),
+            ]
+            for key, value in kwargs.iteritems():
+                if hasattr(user, key):
+                    setattr(user, key, value)
+                    out.append('  {}: {}'.format(key, value))
+            user.save()
+            print('\n'.join(out).format(user.get_username()), file=_stdout)
+
 
 # CONCRETE MODELS #############################################################
 
 
 class User(AbstractUser):
-    pass
+    objects = UserManager()
