@@ -79,6 +79,7 @@ TODO
     and checking `INSTALLED_APPS`.
   * Authentication backend that checks all registered plugins, not just the one
     assigned to `AUTH_USER_MODEL`.
+  * Make `email` field case insensitive.
 
 
 [django-polymorphic]: https://django-polymorphic.readthedocs.org/en/latest/index.html
