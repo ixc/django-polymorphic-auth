@@ -1,22 +1,19 @@
 Overview
 ========
 
-Provides a replacement `User` model that is polymorphic. You can easily replace
-the active user model without any complicated schema and data migrations, or
-even have multiple user types with their own model active at the same time.
+Provides a polymorphic parent `User` model. You can assign a polymorphic child
+model to the `AUTH_USER_MODEL` setting, and subsequently replace it with
+different child models without complicated schema or data migrations.
+
+You can even have multiple child models active at the same time!
 
 
 How It Works
 ============
 
-There is a concrete polymorphic parent model that contains the bare minimum
-required by Django for a user model. This is where your foreign key fields will
-point to, and this allows you to avoid schema migrations when replacing the
-user model.
-
-There are also several mixin classes that add fields and functionality, and
-these can be used in combination to compose one or more polymorphic child
-models.
+The polymorphic parent model contains the bare minimum required by Django for a
+user model. This is where your foreign keys will point to, and this allows you
+to avoid schema migrations when updating the `AUTH_USER_MODEL` setting.
 
 Check out the [django-polymorphic][django-polymorphic] docs for more
 information on the underlying system that makes this possible.
@@ -25,18 +22,18 @@ information on the underlying system that makes this possible.
 Plugins
 =======
 
-Two polymorphic child models are provided as optional plugins, one for email
-based authentication, and another for username based authentication. You can
-easily create your own plugins.
+Several child models are also provided as user type plugins for common use
+cases (email login, username login, etc.), along with a number of abstract
+models and mixin classes that you can use to create your own plugins.
 
 For example:
 
     # myproject/usertypes/foo/models.py
 
     from django.utils.translation import ugettext_lazy as _
-    from polymorphic_auth.usertypes.email.abstract import AbstractEmailUser
+    from polymorphic_auth.usertypes.email.abstract import AbstractUser
 
-    class FooUser(AbstractEmailUser):
+    class FooUser(AbstractUser):
         foo = models.CharField(unique=True)
 
         USERNAME_FIELD = 'foo'
@@ -45,19 +42,48 @@ For example:
             verbose_name = _('user with foo login')
             verbose_name_plural = _('users with foo login')
 
-Then just add your plugin to the `INSTALLED_APPS` setting and point to the new
+Then just add your plugin to the `INSTALLED_APPS` setting and point to your
 model in the `AUTH_USER_MODEL` setting:
 
     # myproject/settings.py
 
-    INSTALLED_APPS += ('myproject.usertypes.foo', )
     AUTH_USER_MODEL = 'foo.FooUser'
+    INSTALLED_APPS += ('myproject.usertypes.foo', )
+
+
+ADMINS and MANAGERS
+===================
+
+The default app contains a `post_migrate` signal handler that will create
+superuser and staff accounts for each name and email in the `ADMINS` and
+`MANAGERS` settings, and write the credentials to `sys.stdout` (configurable).
+
+Say goodbye to `./manage.py createsuperuser`!
+
+To add support to your custom plugins, override the `AbstractUser.try_create`
+classmethod and have it derive values for required fields from the `name` and
+`email` kwargs.
+
+For example:
+
+    # myproject/usertypes/foo/models.py
+
+    import re
+
+    class FooUser(AbstractUser):
+        ...
+
+        @classmethod
+        def try_create(self, **kwargs):
+            email = kwargs.get('email', '')
+            kwargs.setdefault('foo', re.sub(r'@.+', '', email))
+            return super(FooUser, cls).try_create(**kwargs)
 
 
 Admin
 =====
 
-If two or more plugins are installed, you will be asked which type of user you
+If more than one plugin is installed, you will be asked which type of user you
 want to create when adding a new user via the admin. If there is only one
 plugin installed, it will take you directly to the change form for that plugin.
 
@@ -69,6 +95,7 @@ You can customise the admin class for your plugins:
     from polymorphic_auth.admin import UserChildAdmin
 
     class EmailUserAdmin(UserChildAdmin):
+
         # define custom features here
 
 

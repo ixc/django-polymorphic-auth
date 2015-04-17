@@ -23,6 +23,8 @@ class Migration(migrations.Migration):
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into the admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether the user account is active. Disable this instead of deleting the account.', verbose_name='active')),
+                ('first_name', models.CharField(help_text='Required.', max_length=255, verbose_name='first name')),
+                ('last_name', models.CharField(help_text='Required.', max_length=255, verbose_name='last name')),
                 ('created', models.DateTimeField(default=django.utils.timezone.now, verbose_name='created', editable=False)),
                 ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', verbose_name='groups')),
                 ('polymorphic_ctype', models.ForeignKey(related_name='polymorphic_polymorphic_auth.user_set+', editable=False, to='contenttypes.ContentType', null=True)),
@@ -30,9 +32,8 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'verbose_name': 'user',
-                'verbose_name_plural': 'users',
             },
+            bases=(polymorphic_auth.models.NameMethodsMixin, models.Model),
             managers=[
                 (b'objects', polymorphic_auth.models.UserManager()),
             ],

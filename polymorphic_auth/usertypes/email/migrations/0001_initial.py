@@ -17,14 +17,13 @@ class Migration(migrations.Migration):
             fields=[
                 ('user_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='polymorphic_auth.User')),
                 ('email', models.EmailField(help_text='Required. Unique.', unique=True, max_length=254, verbose_name='email address', error_messages={b'unique': 'A user with that email address already exists.'})),
-                ('first_name', models.CharField(help_text='Required.', max_length=255, verbose_name='first name')),
-                ('last_name', models.CharField(help_text='Required.', max_length=255, verbose_name='last name')),
             ],
             options={
+                'abstract': False,
                 'verbose_name': 'user with email login',
                 'verbose_name_plural': 'users with email login',
             },
-            bases=(polymorphic_auth.models.NameMethodsMixin, 'polymorphic_auth.user', models.Model),
+            bases=('polymorphic_auth.user', models.Model),
             managers=[
                 (b'objects', polymorphic_auth.models.UserManager()),
             ],

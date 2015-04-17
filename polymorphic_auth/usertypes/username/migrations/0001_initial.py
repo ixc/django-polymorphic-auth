@@ -18,15 +18,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('user_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='polymorphic_auth.User')),
                 ('email', models.EmailField(help_text='Required. Unique.', unique=True, max_length=254, verbose_name='email address', error_messages={b'unique': 'A user with that email address already exists.'})),
-                ('first_name', models.CharField(help_text='Required.', max_length=255, verbose_name='first name')),
-                ('last_name', models.CharField(help_text='Required.', max_length=255, verbose_name='last name')),
                 ('username', models.CharField(error_messages={b'unique': 'A user with that username already exists.'}, max_length=255, validators=[django.core.validators.RegexValidator(b'^[\\w.@+-]+$', 'This field is invalid.', b'invalid')], help_text='Required. Unique. Must contain only letters, digits and @.+-_ characters.', unique=True, verbose_name='username')),
             ],
             options={
+                'abstract': False,
                 'verbose_name': 'user with username login',
                 'verbose_name_plural': 'users with username login',
             },
-            bases=(polymorphic_auth.models.NameMethodsMixin, 'polymorphic_auth.user', models.Model),
+            bases=(polymorphic_auth.models.UsernameMethodsMixin, 'polymorphic_auth.user', models.Model),
             managers=[
                 (b'objects', polymorphic_auth.models.UserManager()),
             ],
