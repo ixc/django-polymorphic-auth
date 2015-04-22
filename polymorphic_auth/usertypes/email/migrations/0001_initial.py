@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import polymorphic_auth.models
 
 
 class Migration(migrations.Migration):
@@ -24,8 +23,5 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'users with email login',
             },
             bases=('polymorphic_auth.user', models.Model),
-            managers=[
-                (b'objects', polymorphic_auth.models.UserManager()),
-            ],
         ),
     ]

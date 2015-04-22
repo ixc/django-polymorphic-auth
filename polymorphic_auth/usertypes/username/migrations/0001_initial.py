@@ -26,8 +26,5 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'users with username login',
             },
             bases=(polymorphic_auth.models.UsernameMethodsMixin, 'polymorphic_auth.user', models.Model),
-            managers=[
-                (b'objects', polymorphic_auth.models.UserManager()),
-            ],
         ),
     ]

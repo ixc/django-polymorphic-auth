@@ -53,7 +53,8 @@ class EmailFieldMixin(models.Model):
     """
 
     email = models.EmailField(
-        _('email address'), help_text=_('Required. Unique.'), unique=True,
+        _('email address'), help_text=_('Required. Unique.'), max_length=254,
+        unique=True,
         error_messages={
             'unique': _('A user with that email address already exists.'),
         })
@@ -165,8 +166,6 @@ class UserManager(PolymorphicManager, BaseUserManager):
 
     https://docs.djangoproject.com/en/1.8/topics/auth/customizing/#django.contrib.auth.models.CustomUserManager
     """
-
-    use_in_migrations = True
 
     def _create_user(self, password, **extra_fields):
         """
