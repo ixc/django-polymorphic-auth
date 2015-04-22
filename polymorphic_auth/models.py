@@ -213,6 +213,15 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
     def __str__(self):
         return six.text_type(self.get_username())
 
+    def save(self, *args, **kwargs):
+        """
+        Set ``last_login`` to now. This field was required in Django 1.7, but
+        can be null in Django 1.8. Our migrations are created with Django 1.7,
+        so we need to set a default.
+        """
+        self.last_login = self.last_login or timezone.now()
+        super(AbstractUser, self).save(*args, **kwargs)
+
     @classmethod
     def try_create(cls, _stdout=sys.stdout, **kwargs):
         """
