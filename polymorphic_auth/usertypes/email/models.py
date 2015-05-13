@@ -15,6 +15,10 @@ class AbstractEmailUser(User, EmailFieldMixin):
         verbose_name = _('user with email login')
         verbose_name_plural = _('users with email login')
 
+    @property
+    def username(self):
+        return getattr(self, self.USERNAME_FIELD)
+
 
 class EmailUser(AbstractEmailUser):
     objects = UserManager()
