@@ -18,7 +18,7 @@ def create_user_creation_form(user_model, user_model_fields):
     return CreationForm
 
 
-class UserChildAdmin(PolymorphicChildModelAmin):
+class UserChildAdmin(PolymorphicChildModelAdmin):
     base_fieldsets = (
         ('Meta', {
             'classes': ('collapse', ),
