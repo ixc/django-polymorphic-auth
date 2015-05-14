@@ -32,7 +32,6 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
     )
     base_form = UserChangeForm
     base_model = User
-    change_form_template = 'admin/polymorphic_auth/change_form.html'
 
     def get_form(self, request, obj=None, **kwargs):
         """
