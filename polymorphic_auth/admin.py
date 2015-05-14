@@ -1,13 +1,24 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from polymorphic_auth.models import User
 from polymorphic.admin import \
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 
 
-class UserChildAdmin(PolymorphicChildModelAdmin):
+def create_user_creation_form(user_model, user_model_fields):
+    """
+    Creates a creation form for the user model and model fields.
+    """
+    class CreationForm(UserCreationForm):
+        class Meta:
+            model = user_model
+            fields = user_model_fields
+    return CreationForm
+
+
+class UserChildAdmin(PolymorphicChildModelAmin):
     base_fieldsets = (
         ('Meta', {
             'classes': ('collapse', ),
@@ -21,6 +32,21 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
     )
     base_form = UserChangeForm
     base_model = User
+    change_form_template = 'admin/polymorphic_auth/change_form.html'
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Use special form during user creation
+        """
+        defaults = {}
+        # If an object has not yet been created we can ignorethe base_fieldsets and use a form
+        # designed for user creation. This emulated the behaviour of the django user creation
+        # process.
+        if obj is None:
+            self.base_fieldsets = None
+            defaults['form'] = create_user_creation_form(self.model, (self.model.USERNAME_FIELD, ))
+        defaults.update(kwargs)
+        return super(UserChildAdmin, self).get_form(request, obj, **defaults)
 
 
 class UserAdmin(PolymorphicParentModelAdmin, UserAdmin):
