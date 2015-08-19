@@ -1,4 +1,5 @@
 from django import forms, VERSION as django_version
+from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -127,17 +128,43 @@ class UserAdmin(PolymorphicParentModelAdmin, UserAdmin):
     ordering = (base_model.USERNAME_FIELD,)
 
     def get_child_models(self):
-        from polymorphic_auth.usertypes.email.admin import EmailUserAdmin
-        from polymorphic_auth.usertypes.email.models import EmailUser
-        from polymorphic_auth.usertypes.username.admin import UsernameUserAdmin
-        from polymorphic_auth.usertypes.username.models import UsernameUser
         child_models = []
-        if 'polymorphic_auth.usertypes.email' in \
-                settings.INSTALLED_APPS:
-            child_models.append((EmailUser, EmailUserAdmin))
-        if 'polymorphic_auth.usertypes.username' in \
-                settings.INSTALLED_APPS:
-            child_models.append((UsernameUser, UsernameUserAdmin))
+
+        def import_class(cl):
+            d = cl.rfind(".")
+            classname = cl[d+1:len(cl)]
+            m = __import__(cl[0:d], globals(), locals(), [classname])
+            return getattr(m, classname)
+
+        # First try the auth model overrides via the
+        # `POLYMORPHIC_AUTH_CHILD_MODELS` setting.
+        for modelPath, adminModelPath in getattr(
+                settings, 'POLYMORPHIC_AUTH_CHILD_MODELS', []):
+            try:
+                # try [appname].[modelname] format first
+                model = apps.get_model(modelPath)
+            except LookupError:
+                # try full path to module
+                model = import_class(modelPath)
+
+            adminModel = import_class(adminModelPath)
+
+            if model and adminModel:
+                child_models.append((model, adminModel))
+
+        if len(child_models) == 0:
+            # fall back to auto-detection of built-in user types
+            from polymorphic_auth.usertypes.email.admin import EmailUserAdmin
+            from polymorphic_auth.usertypes.email.models import EmailUser
+            from polymorphic_auth.usertypes.username.admin import UsernameUserAdmin
+            from polymorphic_auth.usertypes.username.models import UsernameUser
+            if 'polymorphic_auth.usertypes.email' in \
+                    settings.INSTALLED_APPS:
+                child_models.append((EmailUser, EmailUserAdmin))
+            if 'polymorphic_auth.usertypes.username' in \
+                    settings.INSTALLED_APPS:
+                child_models.append((UsernameUser, UsernameUserAdmin))
+
         return child_models
 
 
