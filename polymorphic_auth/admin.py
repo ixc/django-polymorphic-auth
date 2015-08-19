@@ -145,6 +145,10 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
     base_form = _UserChangeForm if django_version < (1, 8) else UserChangeForm
     base_model = User
 
+    def __init__(self, *args, **kwargs):
+        super(UserChildAdmin, self).__init__(*args, **kwargs)
+        self.orig_base_fieldsets = self.base_fieldsets
+
     def get_form(self, request, obj=None, **kwargs):
         """
         Use special form during user creation
@@ -156,6 +160,9 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
         if obj is None:
             self.base_fieldsets = None
             defaults['form'] = create_user_creation_form(self.model, (self.model.USERNAME_FIELD, ))
+        else:
+            # restore original base fieldsets
+            self.base_fieldsets = self.orig_base_fieldsets
         defaults.update(kwargs)
         return super(UserChildAdmin, self).get_form(request, obj, **defaults)
 
