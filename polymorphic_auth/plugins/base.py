@@ -1,3 +1,5 @@
+import inspect
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -54,12 +56,27 @@ class BaseChildModelPlugin(object):
     model = None
     model_admin = None
 
+    @staticmethod
+    def resolve_class(cl):
+        if inspect.isclass(cl):
+            # already a class
+            return cl
+        try:
+            # try [appname].[modelname] format first
+            return apps.get_model(cl)
+        except (AttributeError, LookupError, ValueError):
+            # try full path to module
+            d = cl.rfind(".")
+            classname = cl[d+1:len(cl)]
+            m = __import__(cl[0:d], globals(), locals(), [classname])
+            return getattr(m, classname)
+
     @property
     def content_type(self):
         """
         Return the ``ContentType`` for the model.
         """
-        return ContentType.objects.get_for_model(self.model)
+        return ContentType.objects.get_for_model(self.model_class())
 
     @property
     def verbose_name(self):
@@ -67,4 +84,31 @@ class BaseChildModelPlugin(object):
         Returns the title for the plugin, by default it reads the
         ``verbose_name`` of the model.
         """
-        return self.model._meta.verbose_name
+        return self.model_class()._meta.verbose_name
+
+    @classmethod
+    def model_class(cls):
+        """
+        Resolve ``model`` attribute into a class type (if not already).
+        """
+        return cls.resolve_class(cls.model)
+
+    @classmethod
+    def model_admin_class(cls):
+        """
+        Resolve ``model_admin`` attribute into a class type (if not already).
+        """
+        return cls.resolve_class(cls.model_admin)
+
+    @classmethod
+    def unregister(cls, model):
+        """
+        Remove all existing plugins for a particular model
+        """
+        model = cls.resolve_class(model)
+        new_plugins = []
+        for plugin in cls.plugins:
+            if plugin.model_class() != model:
+                new_plugins.append(plugin)
+
+        cls.plugins = new_plugins

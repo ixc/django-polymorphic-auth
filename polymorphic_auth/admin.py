@@ -1,4 +1,3 @@
-import inspect
 from django import forms, VERSION as django_version
 from django.apps import apps
 from django.contrib import admin
@@ -181,31 +180,9 @@ class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     def get_child_models(self):
         child_models = []
 
-        def import_class(cl):
-            if inspect.isclass(cl):
-                # already a class
-                return cl
-            d = cl.rfind(".")
-            classname = cl[d+1:len(cl)]
-            m = __import__(cl[0:d], globals(), locals(), [classname])
-            return getattr(m, classname)
-
-        auth_plugins = plugins.PolymorphicAuthChildModelPlugin.get_plugins()
-        for plugin in auth_plugins:
-            try:
-                try:
-                    # try [appname].[modelname] format first
-                    model = apps.get_model(plugin.model)
-                except (AttributeError, LookupError):
-                    # try full path to module
-                    model = import_class(plugin.model)
-            except AlreadyRegistered:
-                pass
-
-            adminModel = import_class(plugin.model_admin)
-
-            if model and adminModel:
-                child_models.append((model, adminModel))
+        for plugin in plugins.PolymorphicAuthChildModelPlugin.get_plugins():
+            child_models.append(
+                (plugin.model_class(), plugin.model_admin_class()))
 
         return child_models
 

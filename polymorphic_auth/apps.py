@@ -2,7 +2,6 @@ from django.apps import AppConfig
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_migrate
-from django.utils.module_loading import autodiscover_modules
 
 
 def create_users(sender, **kwargs):
