@@ -1,6 +1,8 @@
+import inspect
 from django import forms, VERSION as django_version
-from django.conf import settings
+from django.apps import apps
 from django.contrib import admin
+from django.contrib.admin.sites import AlreadyRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import \
     ReadOnlyPasswordHashField, UserChangeForm, UserCreationForm
@@ -8,6 +10,49 @@ from django.utils.translation import ugettext_lazy as _
 from polymorphic_auth.models import User
 from polymorphic.admin import \
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from . import plugins
+
+
+class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
+    """
+    Get child models and choice labels from registered plugins.
+    """
+
+    child_model_plugin_class = None
+    child_model_admin = None
+
+    def get_child_models(self):
+        """
+        Get child models from registered plugins. Fallback to the child model
+        admin and its base model if no plugins are registered.
+        """
+        child_models = []
+        for plugin in self.child_model_plugin_class.get_plugins():
+            child_models.append((plugin.model, plugin.model_admin))
+        if not child_models:
+            child_models.append((
+                self.child_model_admin.base_model,
+                self.child_model_admin,
+            ))
+        return child_models
+
+    def get_child_type_choices(self, request, action):
+        """
+        Override choice labels with ``verbose_name`` from plugins and sort.
+        """
+        # Get choices from the super class to check permissions.
+        choices = super(ChildModelPluginPolymorphicParentModelAdmin, self) \
+            .get_child_type_choices(request, action)
+        # Update label with verbose name from plugins.
+        plugins = self.child_model_plugin_class.get_plugins()
+        if plugins:
+            labels = {
+                plugin.content_type.pk: plugin.verbose_name
+                for plugin in plugins
+            }
+            choices = [(ctype, labels[ctype]) for ctype, _ in choices]
+            return sorted(choices, lambda a, b: cmp(a[1], b[1]))
+        return choices
 
 
 def create_user_creation_form(user_model, user_model_fields):
@@ -101,6 +146,10 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
     base_form = _UserChangeForm if django_version < (1, 8) else UserChangeForm
     base_model = User
 
+    def __init__(self, *args, **kwargs):
+        super(UserChildAdmin, self).__init__(*args, **kwargs)
+        self.orig_base_fieldsets = self.base_fieldsets
+
     def get_form(self, request, obj=None, **kwargs):
         """
         Use special form during user creation
@@ -112,11 +161,14 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
         if obj is None:
             self.base_fieldsets = None
             defaults['form'] = create_user_creation_form(self.model, (self.model.USERNAME_FIELD, ))
+        else:
+            # restore original base fieldsets
+            self.base_fieldsets = self.orig_base_fieldsets
         defaults.update(kwargs)
         return super(UserChildAdmin, self).get_form(request, obj, **defaults)
 
 
-class UserAdmin(PolymorphicParentModelAdmin, UserAdmin):
+class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     base_model = User
     list_filter = ('is_active', 'is_staff', 'is_superuser', 'created')
     list_display = (
@@ -127,17 +179,34 @@ class UserAdmin(PolymorphicParentModelAdmin, UserAdmin):
     ordering = (base_model.USERNAME_FIELD,)
 
     def get_child_models(self):
-        from polymorphic_auth.usertypes.email.admin import EmailUserAdmin
-        from polymorphic_auth.usertypes.email.models import EmailUser
-        from polymorphic_auth.usertypes.username.admin import UsernameUserAdmin
-        from polymorphic_auth.usertypes.username.models import UsernameUser
         child_models = []
-        if 'polymorphic_auth.usertypes.email' in \
-                settings.INSTALLED_APPS:
-            child_models.append((EmailUser, EmailUserAdmin))
-        if 'polymorphic_auth.usertypes.username' in \
-                settings.INSTALLED_APPS:
-            child_models.append((UsernameUser, UsernameUserAdmin))
+
+        def import_class(cl):
+            if inspect.isclass(cl):
+                # already a class
+                return cl
+            d = cl.rfind(".")
+            classname = cl[d+1:len(cl)]
+            m = __import__(cl[0:d], globals(), locals(), [classname])
+            return getattr(m, classname)
+
+        auth_plugins = plugins.PolymorphicAuthChildModelPlugin.get_plugins()
+        for plugin in auth_plugins:
+            try:
+                try:
+                    # try [appname].[modelname] format first
+                    model = apps.get_model(plugin.model)
+                except (AttributeError, LookupError):
+                    # try full path to module
+                    model = import_class(plugin.model)
+            except AlreadyRegistered:
+                pass
+
+            adminModel = import_class(plugin.model_admin)
+
+            if model and adminModel:
+                child_models.append((model, adminModel))
+
         return child_models
 
 
