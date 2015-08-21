@@ -1,7 +1,5 @@
 from django import forms, VERSION as django_version
-from django.apps import apps
 from django.contrib import admin
-from django.contrib.admin.sites import AlreadyRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import \
     ReadOnlyPasswordHashField, UserChangeForm, UserCreationForm
@@ -20,11 +18,6 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
     child_model_plugin_class = None
     child_model_admin = None
 
-    def __init__(self, *args, **kwargs):
-        self.child_model_plugin_class = plugins.PolymorphicAuthChildModelPlugin
-        super(ChildModelPluginPolymorphicParentModelAdmin, self).__init__(
-            *args, **kwargs)
-
     def get_child_models(self):
         """
         Get child models from registered plugins. Fallback to the child model
@@ -33,7 +26,7 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
         child_models = []
         for plugin in self.child_model_plugin_class.get_plugins():
             child_models.append(
-                (plugin.model_class(), plugin.model_admin_class()))
+                (plugin.get_model_class(), plugin.get_model_admin_class()))
 
         if not child_models:
             child_models.append((
@@ -169,6 +162,8 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
 
 class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     base_model = User
+    child_model_plugin_class = plugins.PolymorphicAuthChildModelPlugin
+    child_model_admin = UserChildAdmin
     list_filter = ('is_active', 'is_staff', 'is_superuser', 'created')
     list_display = (
         '__unicode__', 'first_name', 'last_name', 'is_active', 'is_staff',

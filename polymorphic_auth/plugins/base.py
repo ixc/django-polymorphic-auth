@@ -76,7 +76,7 @@ class BaseChildModelPlugin(object):
         """
         Return the ``ContentType`` for the model.
         """
-        return ContentType.objects.get_for_model(self.model_class())
+        return ContentType.objects.get_for_model(self.get_model_class())
 
     @property
     def verbose_name(self):
@@ -84,31 +84,18 @@ class BaseChildModelPlugin(object):
         Returns the title for the plugin, by default it reads the
         ``verbose_name`` of the model.
         """
-        return self.model_class()._meta.verbose_name
+        return self.get_model_class()._meta.verbose_name
 
     @classmethod
-    def model_class(cls):
+    def get_model_class(cls):
         """
         Resolve ``model`` attribute into a class type (if not already).
         """
         return cls.resolve_class(cls.model)
 
     @classmethod
-    def model_admin_class(cls):
+    def get_model_admin_class(cls):
         """
         Resolve ``model_admin`` attribute into a class type (if not already).
         """
         return cls.resolve_class(cls.model_admin)
-
-    @classmethod
-    def unregister(cls, model):
-        """
-        Remove all existing plugins for a particular model
-        """
-        model = cls.resolve_class(model)
-        new_plugins = []
-        for plugin in cls.plugins:
-            if plugin.model_class() != model:
-                new_plugins.append(plugin)
-
-        cls.plugins = new_plugins

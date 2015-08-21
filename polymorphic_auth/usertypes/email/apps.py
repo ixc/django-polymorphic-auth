@@ -12,6 +12,3 @@ from django.utils.module_loading import autodiscover_modules
 class AppConfig(AppConfig):
     name = 'polymorphic_auth.usertypes.email'
     label = 'polymorphic_auth_email'
-
-    def ready(self):
-        autodiscover_modules('plugin')
