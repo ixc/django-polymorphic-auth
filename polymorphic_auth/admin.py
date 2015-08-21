@@ -20,6 +20,11 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
     child_model_plugin_class = None
     child_model_admin = None
 
+    def __init__(self, *args, **kwargs):
+        self.child_model_plugin_class = plugins.PolymorphicAuthChildModelPlugin
+        super(ChildModelPluginPolymorphicParentModelAdmin, self).__init__(
+            *args, **kwargs)
+
     def get_child_models(self):
         """
         Get child models from registered plugins. Fallback to the child model
@@ -27,7 +32,9 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
         """
         child_models = []
         for plugin in self.child_model_plugin_class.get_plugins():
-            child_models.append((plugin.model, plugin.model_admin))
+            child_models.append(
+                (plugin.model_class(), plugin.model_admin_class()))
+
         if not child_models:
             child_models.append((
                 self.child_model_admin.base_model,
@@ -169,15 +176,6 @@ class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     search_fields = ('first_name', 'last_name')
     polymorphic_list = True
     ordering = (base_model.USERNAME_FIELD,)
-
-    def get_child_models(self):
-        child_models = []
-
-        for plugin in plugins.PolymorphicAuthChildModelPlugin.get_plugins():
-            child_models.append(
-                (plugin.model_class(), plugin.model_admin_class()))
-
-        return child_models
 
 
 admin.site.register(User, UserAdmin)
