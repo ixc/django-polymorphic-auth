@@ -7,6 +7,12 @@ setuptools.setup(
     version=__version__,
     packages=setuptools.find_packages(),
     install_requires=[
+        'coverage',
+        'django-dynamic-fixture',
+        'django-nose',
         'django-polymorphic',
+        'django-webtest',
+        'nose-progressive',
+        'WebTest',
     ],
 )

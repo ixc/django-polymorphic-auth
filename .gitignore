@@ -1,2 +1,5 @@
 *.egg-info
 *.py[co]
+/.coverage
+/.tox/
+/htmlcov/
