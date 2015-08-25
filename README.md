@@ -22,7 +22,7 @@ information on the underlying system that makes this possible.
 Plugins
 =======
 
-Several child models are also provided as user type plugins for common use
+Several child models are also provided as `usertype` plugins for common use
 cases (email login, username login, etc.), along with a number of abstract
 models and mixin classes that you can use to create your own plugins.
 
@@ -31,7 +31,7 @@ For example:
     # myproject/usertypes/foo/models.py
 
     from django.utils.translation import ugettext_lazy as _
-    from polymorphic_auth.usertypes.email.abstract import AbstractUser
+    from polymorphic_auth.models import AbstractUser
 
     class FooUser(AbstractUser):
         foo = models.CharField(unique=True)
