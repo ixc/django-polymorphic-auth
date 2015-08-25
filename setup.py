@@ -8,6 +8,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'coverage',
+        'Django',
         'django-dynamic-fixture',
         'django-nose',
         'django-polymorphic',
