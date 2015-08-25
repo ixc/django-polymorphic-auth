@@ -16,4 +16,7 @@ setuptools.setup(
         'nose-progressive',
         'WebTest',
     ],
+    extras_require={
+        'dev': ['ipdb', 'ipython'],
+    },
 )
