@@ -166,7 +166,7 @@ class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     child_model_admin = UserChildAdmin
     list_filter = ('is_active', 'is_staff', 'is_superuser', 'created')
     list_display = (
-        '__unicode__', 'first_name', 'last_name', 'is_active', 'is_staff',
+        '__str__', 'first_name', 'last_name', 'is_active', 'is_staff',
         'is_superuser', 'created')
     search_fields = ('first_name', 'last_name')
     polymorphic_list = True
