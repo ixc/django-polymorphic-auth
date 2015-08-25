@@ -26,7 +26,7 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
         child_models = []
         for plugin in self.child_model_plugin_class.get_plugins():
             child_models.append(
-                (plugin.get_model_class(), plugin.get_model_admin_class()))
+                (plugin.model, plugin.model_admin))
 
         if not child_models:
             child_models.append((

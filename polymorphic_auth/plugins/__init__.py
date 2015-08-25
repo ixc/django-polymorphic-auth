@@ -10,9 +10,8 @@ class PolymorphicAuthChildModelPlugin(six.with_metaclass(
 
     @classmethod
     def get_plugin_for_model(cls, model):
-        model = cls.resolve_class(model)
         for plugin in cls.plugins:
-            if plugin.get_model_class() == model:
+            if plugin.model == model:
                 return plugin
 
     @classmethod
