@@ -225,7 +225,8 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
     @classmethod
     def try_create(cls, _stdout=sys.stdout, **kwargs):
         """
-        Creates a user account, if it does not already exist.
+        Creates a user account, if it does not already exist. Returns a 2-tuple
+        containing the user and a ``created`` boolean.
 
         You must provide all required fields as ``kwargs``. If no password is
         given, one will be randomly generated.
@@ -239,7 +240,7 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
         password = kwargs.pop('password', cls.objects.make_random_password(
             length=random.randint(19, 28)))
         try:
-            cls.objects.get(**{cls.USERNAME_FIELD: username})
+            return cls.objects.get(**{cls.USERNAME_FIELD: username}), False
         except cls.DoesNotExist:
             user = cls()
             setattr(user, cls.USERNAME_FIELD, username)
@@ -261,6 +262,7 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
             user.save()
             # Write output to `_stdout`, now that we know the username.
             print('\n'.join(out).format(user.get_username()), file=_stdout)
+            return user, True
 
 
 class AbstractAdminUser(
