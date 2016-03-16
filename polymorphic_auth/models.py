@@ -12,7 +12,12 @@ from django.db import models
 from django.utils import six, timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from polymorphic import PolymorphicModel, PolymorphicManager
+try:
+    # for django-polymorphic >= 0.8
+    from polymorphic.models import PolymorphicModel, PolymorphicManager
+except ImportError:
+     # for django-polymorphic < 0.8
+     from polymorphic import PolymorphicModel, PolymorphicManager
 
 
 # FIELD MIXINS ################################################################
