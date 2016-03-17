@@ -5,9 +5,11 @@ Tests for ``polymorphic_auth`` app.
 # WebTest API docs: http://webtest.readthedocs.org/en/latest/api.html
 
 import re
+
 from django.contrib.admin.sites import AdminSite
 from django_webtest import WebTest
 from django.core.urlresolvers import reverse
+
 from polymorphic_auth.usertypes.email.models import EmailUser
 
 
@@ -35,7 +37,8 @@ class TestUserAdminBaseFieldsets(WebTest):
         # edit our staff user and capture the form response.
 
         response = self.app.get(
-            reverse('admin:polymorphic_auth_user_change', args=(self.staff_user.pk,)),
+            reverse('admin:polymorphic_auth_user_change',
+                    args=(self.staff_user.pk,)),
             user=self.staff_user
         ).maybe_follow(user=self.staff_user)
         form1_response = response.form.text
@@ -55,19 +58,27 @@ class TestUserAdminBaseFieldsets(WebTest):
         # Edit our staff user again and capture the form response.
 
         response = self.app.get(
-            reverse('admin:polymorphic_auth_user_change', args=(self.staff_user.pk,)), user=self.staff_user
+            reverse('admin:polymorphic_auth_user_change',
+                    args=(self.staff_user.pk,)),
+            user=self.staff_user
         )
         form2_response = response.form.text
 
         # Rip out fields we expect to differ between the two responses.
 
-        form1_response = re.sub(r'<input name="csrfmiddlewaretoken" (.*?)/>', '', form1_response)
-        form1_response = re.sub(r'<input class="vTimeField" (.*?)/>', '', form1_response)
-        form1_response = re.sub(r'<input id="initial-id_last_login_1" (.*?)/>', '', form1_response)
+        form1_response = re.sub(
+            r'<input name="csrfmiddlewaretoken" (.*?)/>', '', form1_response)
+        form1_response = re.sub(
+            r'<input class="vTimeField" (.*?)/>', '', form1_response)
+        form1_response = re.sub(
+            r'<input id="initial-id_last_login_1" (.*?)/>', '', form1_response)
 
-        form2_response = re.sub(r'<input name="csrfmiddlewaretoken" (.*?)/>', '', form2_response)
-        form2_response = re.sub(r'<input class="vTimeField" (.*?)/>', '', form2_response)
-        form2_response = re.sub(r'<input id="initial-id_last_login_1" (.*?)/>', '', form2_response)
+        form2_response = re.sub(
+            r'<input name="csrfmiddlewaretoken" (.*?)/>', '', form2_response)
+        form2_response = re.sub(
+            r'<input class="vTimeField" (.*?)/>', '', form2_response)
+        form2_response = re.sub(
+            r'<input id="initial-id_last_login_1" (.*?)/>', '', form2_response)
 
         # Form output should be identical to the first.
         # This will not be the case if the base_fieldsets have been lost.
