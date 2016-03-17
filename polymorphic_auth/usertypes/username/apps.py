@@ -9,5 +9,5 @@ from django.apps import AppConfig
 
 
 class AppConfig(AppConfig):
-    name = '.'.join(__name__.split('.')[:-1])  # Name of package where `apps` module is located
+    name = '.'.join(__name__.split('.')[:-1])  # Portable
     label = 'polymorphic_auth_username'
