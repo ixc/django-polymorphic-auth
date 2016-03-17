@@ -2,13 +2,15 @@
 Test settings for ``polymorphic_auth`` app.
 """
 
-AUTH_USER_MODEL = 'polymorphic_auth_email.EmailUser'
+AUTH_USER_MODEL = 'polymorphic_auth.User'
+POLYMORPHIC_AUTH = {
+    'DEFAULT_CHILD_MODEL': 'polymorphic_auth_email.EmailUser',
+}
 
 DATABASES = {
     'default': {
-        'ATOMIC_REQUESTS': True,
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'polymorphic_auth',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
     }
 }
 
@@ -22,6 +24,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django_nose',
+    'polymorphic',
     'polymorphic_auth',
     'polymorphic_auth.tests',
     'polymorphic_auth.usertypes.email',
@@ -30,6 +33,7 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ROOT_URLCONF = 'polymorphic_auth.tests.urls'
