@@ -1,9 +1,10 @@
 Overview
 ========
 
-Provides a polymorphic parent `User` model. You can assign a polymorphic child
-model to the `AUTH_USER_MODEL` setting, and subsequently replace it with
-different child models without complicated schema or data migrations.
+Provides a polymorphic parent `User` model and several child models.
+
+You can enable and disable child models without affecting foreign keys to the
+the parent model, and avoid complicated schema and data migrations.
 
 You can even have multiple child models active at the same time!
 
@@ -12,8 +13,9 @@ How It Works
 ============
 
 The polymorphic parent model contains the bare minimum required by Django for a
-user model. This is where your foreign keys will point to, and this allows you
-to avoid schema migrations when updating the `AUTH_USER_MODEL` setting.
+user model. This is where your foreign keys will point to (via the
+`AUTH_USER_MODEL` setting), and this allows you to avoid schema migrations when
+changing child models.
 
 Check out the [django-polymorphic][django-polymorphic] docs for more
 information on the underlying system that makes this possible.
@@ -22,7 +24,7 @@ information on the underlying system that makes this possible.
 Plugins
 =======
 
-Several child models are also provided as user type plugins for common use
+Several child models are also provided as `usertype` plugins for common use
 cases (email login, username login, etc.), along with a number of abstract
 models and mixin classes that you can use to create your own plugins.
 
@@ -31,7 +33,7 @@ For example:
     # myproject/usertypes/foo/models.py
 
     from django.utils.translation import ugettext_lazy as _
-    from polymorphic_auth.usertypes.email.abstract import AbstractUser
+    from polymorphic_auth.models import AbstractUser
 
     class FooUser(AbstractUser):
         foo = models.CharField(unique=True)
@@ -43,12 +45,13 @@ For example:
             verbose_name_plural = _('users with foo login')
 
 Then just add your plugin to the `INSTALLED_APPS` setting and point to your
-model in the `AUTH_USER_MODEL` setting:
+model in the `POLYMORPHIC_AUTH['DEFAULT_CHILD_MODEL']` setting:
 
     # myproject/settings.py
 
-    AUTH_USER_MODEL = 'foo.FooUser'
+    AUTH_USER_MODEL = 'polymorphic_auth.User'
     INSTALLED_APPS += ('myproject.usertypes.foo', )
+    POLYMORPHIC_AUTH = {'DEFAULT_CHILD_MODEL': 'foo.FooUser'}
 
 
 ADMINS and MANAGERS
@@ -105,7 +108,7 @@ TODO
   * Registration system for plugins, instead of hard coding the provided ones
     and checking `INSTALLED_APPS`.
   * Authentication backend that checks all registered plugins, not just the one
-    assigned to `AUTH_USER_MODEL`.
+    assigned to `POLYMORPHIC_AUTH['DEFAULT_CHILD_MODEL']`.
   * Make `email` field case insensitive.
 
 
