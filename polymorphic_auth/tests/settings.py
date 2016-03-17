@@ -25,6 +25,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django_nose',
+    'polymorphic',
     'polymorphic_auth',
     'polymorphic_auth.tests',
     'polymorphic_auth.usertypes.email',
@@ -33,6 +34,7 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ROOT_URLCONF = 'polymorphic_auth.tests.urls'
