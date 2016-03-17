@@ -11,6 +11,15 @@ env:
   - TOXENV=django18
   - TOXENV=django19
 
+matrix:
+  allow_failures:
+    - env: TOXENV=django19
+      python: "2.7"
+    - python: "3.3"
+    - python: "3.4"
+    - python: "3.5"
+  fast_finish: true
+
 install:
   - pip install tox
 
