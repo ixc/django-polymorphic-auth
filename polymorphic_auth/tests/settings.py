@@ -9,9 +9,8 @@ POLYMORPHIC_AUTH = {
 
 DATABASES = {
     'default': {
-        'ATOMIC_REQUESTS': True,
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'polymorphic_auth',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
     }
 }
 
