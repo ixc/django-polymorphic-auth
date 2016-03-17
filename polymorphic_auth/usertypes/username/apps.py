@@ -9,5 +9,5 @@ from django.apps import AppConfig
 
 
 class AppConfig(AppConfig):
-    name = 'polymorphic_auth.usertypes.username'
+    name = '.'.join(__name__.split('.')[:-1])  # Portable
     label = 'polymorphic_auth_username'
