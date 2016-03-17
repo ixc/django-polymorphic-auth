@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from polymorphic_auth.models import User
 from polymorphic.admin import \
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
-from . import plugins
+from polymorphic_auth import plugins
 
 
 class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):

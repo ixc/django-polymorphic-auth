@@ -1,1 +1,1 @@
-default_app_config = 'polymorphic_auth.usertypes.email.apps.AppConfig'
+default_app_config = '%s.apps.AppConfig' % __name__  # Portable

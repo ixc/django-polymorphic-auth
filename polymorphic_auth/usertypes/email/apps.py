@@ -10,5 +10,5 @@ from django.utils.module_loading import autodiscover_modules
 
 
 class AppConfig(AppConfig):
-    name = 'polymorphic_auth.usertypes.email'
+    name = '.'.join(__name__.split('.')[:-1])  # Portable
     label = 'polymorphic_auth_email'
