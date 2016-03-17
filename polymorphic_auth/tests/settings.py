@@ -2,7 +2,10 @@
 Test settings for ``polymorphic_auth`` app.
 """
 
-AUTH_USER_MODEL = 'polymorphic_auth_email.EmailUser'
+AUTH_USER_MODEL = 'polymorphic_auth.User'
+POLYMORPHIC_AUTH = {
+    'DEFAULT_CHILD_MODEL': 'polymorphic_auth_email.EmailUser',
+}
 
 DATABASES = {
     'default': {
