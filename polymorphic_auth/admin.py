@@ -179,5 +179,20 @@ class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
     polymorphic_list = True
     ordering = (base_model.USERNAME_FIELD,)
 
+    def get_search_fields(self, request):
+        """
+        Append `modelname__usernamefield` to the list of fields to search.
+        NB this code is a bit dumb - may break if the reverse relation isn't
+        the same as model_name.
+        """
+        username_fields = ['nope']
+        for model, _ in self.get_child_models():
+            try:
+                username_fields.append("%s__%s" % (model._meta.model_name, model.USERNAME_FIELD))
+            except AttributeError:
+                pass
+        return self.search_fields + tuple(username_fields)
+
+
 
 admin.site.register(User, UserAdmin)
