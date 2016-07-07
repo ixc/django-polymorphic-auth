@@ -50,7 +50,7 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
                 for plugin in plugins
             }
             choices = [(ctype, labels[ctype]) for ctype, _ in choices]
-            return sorted(choices, lambda a, b: cmp(a[1], b[1]))
+            return sorted(choices, key=lambda i: i[1])
         return choices
 
 
