@@ -4,6 +4,7 @@ import random
 import re
 import sys
 
+from django import VERSION as django_version
 from django.contrib.auth.models import \
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core import validators
@@ -218,15 +219,6 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
     def __str__(self):
         return six.text_type(self.get_username())
 
-    def save(self, *args, **kwargs):
-        """
-        Set ``last_login`` to now. This field was required in Django 1.7, but
-        can be null in Django 1.8. Our migrations are created with Django 1.7,
-        so we need to set a default.
-        """
-        self.last_login = self.last_login or timezone.now()
-        super(AbstractUser, self).save(*args, **kwargs)
-
     @classmethod
     def try_create(cls, _stdout=sys.stdout, **kwargs):
         """
@@ -282,6 +274,22 @@ class AbstractAdminUser(
 
     class Meta:
         abstract = True
+
+
+# Monkey-patch Django 1.7's `AbstractBaseUser` fields to match the field
+# settings as applied in Django 1.8, to make our `AbstractAdminUser` model
+# match the one in 1.8+. This should avoid the need for differing DB migrations
+# for downstream projects whether they use Django 1.7 or 1.8+
+if django_version >= (1, 7) and django_version < (1, 8):
+    from django.db.models.fields import NOT_PROVIDED
+
+    groups_field = AbstractAdminUser._meta.get_field('groups')
+    groups_field.help_text = 'The groups this user belongs to. A user will get all permissions granted to each of their groups.'
+
+    last_login_field = AbstractAdminUser._meta.get_field('last_login')
+    last_login_field.blank = True
+    last_login_field.null = True
+    last_login_field.default = NOT_PROVIDED
 
 
 class User(AbstractAdminUser):
