@@ -39,6 +39,7 @@ class AppConfig(AppConfig):
     Connect ``post_migrate`` signal.
     """
     name = 'polymorphic_auth'
+    verbose_name = "Polymorphic Authentication and Authorization"
 
     def ready(self):
         monkey.patch_get_user_model()
