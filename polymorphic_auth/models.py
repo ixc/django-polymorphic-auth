@@ -250,7 +250,7 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
                 '  {}: {{}}'.format(cls.USERNAME_FIELD),
                 '  password: {}'.format(password),
             ]
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 # Only assign values to known attributes, in case `kwargs`
                 # contains data that was only used to derive field values.
                 if hasattr(user, key):
