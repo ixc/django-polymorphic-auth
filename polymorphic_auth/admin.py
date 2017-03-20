@@ -144,6 +144,7 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
     )
     base_form = _UserChangeForm if django_version < (1, 8) else UserChangeForm
     base_model = User
+    filter_horizontal = ('groups', 'user_permissions',)
 
     def __init__(self, *args, **kwargs):
         super(UserChildAdmin, self).__init__(*args, **kwargs)
