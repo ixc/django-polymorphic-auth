@@ -63,12 +63,11 @@ def _check_for_username_case_insensitive_clash(form):
     user = form.instance
     if user and user.IS_USERNAME_CASE_INSENSITIVE:
         username = form.cleaned_data[user.USERNAME_FIELD]
-        filters = {
+        matching_users = type(user).objects.filter(**{
             '%s__iexact' % user.USERNAME_FIELD: username,
-        }
+        })
         if user.pk:
-            filters['pk__neq'] = user.pk
-        matching_users = type(user).objects.filter(**filters)
+            matching_users = matching_users.exclude(pk=user.pk)
         if matching_users:
             raise forms.ValidationError(
                 u"A user with that %s already exists." % user.USERNAME_FIELD)

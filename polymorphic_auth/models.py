@@ -293,14 +293,16 @@ class AbstractAdminUser(
         # Hack to force check for potential duplicate users before save, in
         # case more user-friendly validation sanity checks have not been
         # implemented or have been bypassed.
-        if not self.pk and self.IS_USERNAME_CASE_INSENSITIVE:
+        if self.IS_USERNAME_CASE_INSENSITIVE:
             matching_users = type(self).objects.filter(**{
                 '%s__iexact' % self.USERNAME_FIELD: self.username
             })
+            if self.pk:
+                matching_users = matching_users.exclude(pk=self.pk)
             if matching_users:
                 raise Exception(
-                    u"Username field '%s' matches existing user(s): %s"
-                    % (self.USERNAME_FIELD, matching_users))
+                    u"Identifier field %s='%s' matches existing users: %s"
+                    % (self.USERNAME_FIELD, self.username, matching_users))
 
         super(AbstractAdminUser, self).save(*args, **kwargs)
 
