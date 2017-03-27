@@ -223,6 +223,8 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
 
     USERNAME_FIELD = 'id'
 
+    IS_USERNAME_CASE_INSENSITIVE = False
+
     class Meta:
         abstract = True
         verbose_name = _('user with ID login')
@@ -286,6 +288,21 @@ class AbstractAdminUser(
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        # Hack to force check for potential duplicate users before save, in
+        # case more user-friendly validation sanity checks have not been
+        # implemented or have been bypassed.
+        if not self.pk and self.IS_USERNAME_CASE_INSENSITIVE:
+            matching_users = type(self).objects.filter(**{
+                '%s__iexact' % self.USERNAME_FIELD: self.username
+            })
+            if matching_users:
+                raise Exception(
+                    u"Username field '%s' matches existing user(s): %s"
+                    % (self.USERNAME_FIELD, matching_users))
+
+        super(AbstractAdminUser, self).save(*args, **kwargs)
 
 
 # Monkey-patch Django 1.7's `AbstractBaseUser` fields to match the field
