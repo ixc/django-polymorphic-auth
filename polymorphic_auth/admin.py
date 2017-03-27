@@ -2,7 +2,8 @@ from django import forms, VERSION as django_version
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import \
-    ReadOnlyPasswordHashField, UserChangeForm, UserCreationForm
+    ReadOnlyPasswordHashField, UserChangeForm as DjangoUserChangeForm, \
+    UserCreationForm
 from django.utils.translation import ugettext_lazy as _
 from polymorphic_auth.models import User
 from polymorphic.admin import \
@@ -54,6 +55,25 @@ class ChildModelPluginPolymorphicParentModelAdmin(PolymorphicParentModelAdmin):
         return choices
 
 
+def _check_for_username_case_insensitive_clash(form):
+    """
+    Check for potential duplicate users before save for user types with
+    a case-insensitive `username` field.
+    """
+    user = form.instance
+    if user and user.IS_USERNAME_CASE_INSENSITIVE:
+        username = form.cleaned_data[user.USERNAME_FIELD]
+        filters = {
+            '%s__iexact' % user.USERNAME_FIELD: username,
+        }
+        if user.pk:
+            filters['pk__neq'] = user.pk
+        matching_users = type(user).objects.filter(**filters)
+        if matching_users:
+            raise forms.ValidationError(
+                u"A user with that %s already exists." % user.USERNAME_FIELD)
+
+
 def create_user_creation_form(user_model, user_model_fields):
     """
     Creates a creation form for the user model and model fields.
@@ -86,6 +106,10 @@ def create_user_creation_form(user_model, user_model_fields):
                 )
             return password2
 
+        def clean(self):
+            super(_UserCreationForm, self).clean()
+            _check_for_username_case_insensitive_clash(self)
+
         def save(self, commit=True):
             user = super(_UserCreationForm, self).save(commit=False)
             user.set_password(self.cleaned_data["password1"])
@@ -94,9 +118,14 @@ def create_user_creation_form(user_model, user_model_fields):
             return user
 
     class CreationForm(UserCreationForm):
+
         class Meta:
             model = user_model
             fields = user_model_fields
+
+        def clean(self):
+            super(CreationForm, self).clean()
+            _check_for_username_case_insensitive_clash(self)
 
     if django_version < (1, 8):
         return _UserCreationForm
@@ -123,11 +152,22 @@ class _UserChangeForm(forms.ModelForm):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
+    def clean(self):
+        super(_UserChangeForm, self).clean()
+        _check_for_username_case_insensitive_clash(self)
+
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
         # This is done here, rather than on the field, because the
         # field does not have access to the initial value
         return self.initial["password"]
+
+
+class UserChangeForm(DjangoUserChangeForm):
+
+    def clean(self):
+        super(UserChangeForm, self).clean()
+        _check_for_username_case_insensitive_clash(self)
 
 
 class UserChildAdmin(PolymorphicChildModelAdmin):
