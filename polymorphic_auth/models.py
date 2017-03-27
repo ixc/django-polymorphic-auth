@@ -196,6 +196,18 @@ class UserManager(PolymorphicManager, BaseUserManager):
         extra_fields.update(is_staff=True, is_superuser=True)
         return self._create_user(password, **extra_fields)
 
+    def get_by_natural_key(self, username):
+        """
+        Override default user lookup behaviour to match username (really email)
+        field with case INsensitivity for email-address based users.
+        """
+        if getattr(self.model, 'IS_USERNAME_CASE_INSENSITIVE', False):
+            return self.get(**{
+                '%s__iexact' % self.model.USERNAME_FIELD: username.lower()
+            })
+        else:
+            return super(UserManager, self).get_by_natural_key(username)
+
 
 # MODELS ######################################################################
 

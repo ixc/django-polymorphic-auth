@@ -10,6 +10,8 @@ class AbstractEmailUser(User, EmailFieldMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
+    IS_USERNAME_CASE_INSENSITIVE = True
+
     class Meta:
         abstract = True
         verbose_name = _('user with email login')
