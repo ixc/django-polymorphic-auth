@@ -196,6 +196,18 @@ class UserManager(PolymorphicManager, BaseUserManager):
         extra_fields.update(is_staff=True, is_superuser=True)
         return self._create_user(password, **extra_fields)
 
+    def get_by_natural_key(self, username):
+        """
+        Override default user lookup behaviour to match username (really email)
+        field with case INsensitivity for email-address based users.
+        """
+        if getattr(self.model, 'IS_USERNAME_CASE_INSENSITIVE', False):
+            return self.get(**{
+                '%s__iexact' % self.model.USERNAME_FIELD: username.lower()
+            })
+        else:
+            return super(UserManager, self).get_by_natural_key(username)
+
 
 # MODELS ######################################################################
 
@@ -210,6 +222,8 @@ class AbstractUser(PolymorphicModel, AbstractBaseUser):
         _('created'), default=timezone.now, editable=False)
 
     USERNAME_FIELD = 'id'
+
+    IS_USERNAME_CASE_INSENSITIVE = False
 
     class Meta:
         abstract = True
@@ -274,6 +288,23 @@ class AbstractAdminUser(
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        # Hack to force check for potential duplicate users before save, in
+        # case more user-friendly validation sanity checks have not been
+        # implemented or have been bypassed.
+        if self.IS_USERNAME_CASE_INSENSITIVE:
+            matching_users = type(self).objects.filter(**{
+                '%s__iexact' % self.USERNAME_FIELD: self.username
+            })
+            if self.pk:
+                matching_users = matching_users.exclude(pk=self.pk)
+            if matching_users:
+                raise Exception(
+                    u"Identifier field %s='%s' matches existing users: %s"
+                    % (self.USERNAME_FIELD, self.username, matching_users))
+
+        super(AbstractAdminUser, self).save(*args, **kwargs)
 
 
 # Monkey-patch Django 1.7's `AbstractBaseUser` fields to match the field
