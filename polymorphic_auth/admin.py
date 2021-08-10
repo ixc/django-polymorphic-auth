@@ -1,6 +1,6 @@
 from django import forms, VERSION as django_version
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.forms import \
     ReadOnlyPasswordHashField, UserChangeForm as DjangoUserChangeForm, \
     UserCreationForm
@@ -207,7 +207,7 @@ class UserChildAdmin(PolymorphicChildModelAdmin):
         return super(UserChildAdmin, self).get_form(request, obj, **defaults)
 
 
-class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
+class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, DjangoUserAdmin):
     base_model = User
     child_model_plugin_class = plugins.PolymorphicAuthChildModelPlugin
     child_model_admin = UserChildAdmin
@@ -221,17 +221,28 @@ class UserAdmin(ChildModelPluginPolymorphicParentModelAdmin, UserAdmin):
 
     def get_search_fields(self, request):
         """
-        Append `modelname__usernamefield` to the list of fields to search.
+        Append `modelname__field` to the list of fields to search based on the
+        USERNAME_FIELD and search_field attributes of the child models.
+        
         NB this code is a bit dumb - may break if the reverse relation isn't
         the same as model_name.
         """
-        username_fields = []
-        for model, _ in self.get_child_models():
+        additional_fields = []
+        for model, modeladmin in self.get_child_models():
+            additional_fields += ["%s__%s" % (model._meta.model_name, f) for f in modeladmin.search_fields]
             try:
-                username_fields.append("%s__%s" % (model._meta.model_name, model.USERNAME_FIELD))
+                additional_fields.append("%s__%s" % (model._meta.model_name, model.USERNAME_FIELD))
             except AttributeError:
                 pass
-        return self.search_fields + tuple(username_fields)
+        return self.search_fields + tuple(additional_fields)
+
+    def get_search_results(self, *args, **kwargs):
+        queryset, use_distinct = super(UserAdmin, self).get_search_results(*args, **kwargs)
+        return queryset, any(
+            '__' in field
+            for model, modeladmin in self.get_child_models()
+            for field in modeladmin.search_fields
+        )
 
 
 
